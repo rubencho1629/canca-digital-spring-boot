@@ -1,9 +1,9 @@
 package com.banca.digital.repositories;
 
-import com.banca.digital.entities.Client;
+import com.banca.digital.entities.BankAccount;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ClientRepository extends JpaRepository<Client, Long> {
+public interface BankAccountRepository extends JpaRepository<BankAccount, String> {
 }

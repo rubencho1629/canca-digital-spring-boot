@@ -36,4 +36,6 @@ public class AccountOperation {
 
     @OneToMany(mappedBy = "parentOperation")
     private List<AccountOperation> subOperations;
+
+    private String description;
 }
