@@ -1,5 +1,6 @@
 package com.banca.digital;
 
+import com.banca.digital.dtos.ClientDTO;
 import com.banca.digital.entities.*;
 import com.banca.digital.enums.OperationType;
 import com.banca.digital.enums.StatusAccount;
@@ -44,7 +45,7 @@ public class ApiBancaDigitalApplication {
 	CommandLineRunner start(BankAccountService bankAccountService) {
 		return args -> {
 			Stream.of("Client 1", "Client 2", "Client 3").forEach(c -> {
-				Client client = new Client();
+				ClientDTO client = new ClientDTO();
 				client.setName(c);
 				client.setEmail(c.replaceAll(" ", "").toLowerCase() + "@gmail.com");
 				bankAccountService.saveClient(client);
