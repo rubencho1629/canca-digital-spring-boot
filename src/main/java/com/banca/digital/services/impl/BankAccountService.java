@@ -1,7 +1,10 @@
 package com.banca.digital.services.impl;
 
 
+import com.banca.digital.dtos.BankAccountDTO;
 import com.banca.digital.dtos.ClientDTO;
+import com.banca.digital.dtos.CurrentAccountDTO;
+import com.banca.digital.dtos.SavingsAccountDTO;
 import com.banca.digital.entities.*;
 import com.banca.digital.enums.OperationType;
 import com.banca.digital.enums.StatusAccount;
@@ -86,7 +89,7 @@ public class BankAccountService implements com.banca.digital.services.BankAccoun
     }
 
     @Override
-    public CurrentAccount saveCurrentAccount(double balance, double overdraft, Long clientId) throws ClientNotFoundException {
+    public CurrentAccountDTO saveCurrentAccount(double balance, double overdraft, Long clientId) throws ClientNotFoundException {
         Client client = clientRepository.findById(clientId).orElse(null);
         if (client == null) {
             throw new ClientNotFoundException("Client not found");
@@ -100,13 +103,13 @@ public class BankAccountService implements com.banca.digital.services.BankAccoun
         currentAccount.setOverdraft(overdraft);
 
         CurrentAccount currentAccountBBDD = bankAccountRepository.save(currentAccount);
-        return currentAccountBBDD;
+        return bankAccountMapper.mapToCurrentAccountDTO(currentAccountBBDD);
 
     }
 
 
     @Override
-    public SavingsAccount saveSavingsAccount(double balance, double interestRate, Long clientId) throws ClientNotFoundException {
+    public SavingsAccountDTO saveSavingsAccount(double balance, double interestRate, Long clientId) throws ClientNotFoundException {
         Client client = clientRepository.findById(clientId).orElse(null);
         if (client == null) {
             throw new ClientNotFoundException("Client not found");
@@ -120,7 +123,7 @@ public class BankAccountService implements com.banca.digital.services.BankAccoun
         savingsAccount.setInterestRate(interestRate);
 
         SavingsAccount savingsAccountBBDD = bankAccountRepository.save(savingsAccount);
-        return savingsAccountBBDD;
+        return bankAccountMapper.mapToSavingsAccountDTO(savingsAccountBBDD);
     }
 
     @Override
@@ -131,16 +134,23 @@ public class BankAccountService implements com.banca.digital.services.BankAccoun
     }
 
     @Override
-    public BankAccount getBankAccount(String accountId) throws BankAccountNotFoundExcetion {
+    public BankAccountDTO getBankAccount(String accountId) throws BankAccountNotFoundExcetion {
         BankAccount bankAccount = bankAccountRepository.findById(accountId)
                 .orElseThrow(() -> new BankAccountNotFoundExcetion("Bank Account not found"));
-        return bankAccount;
+        if (bankAccount instanceof CurrentAccount) {
+            SavingsAccount savingsAccount = (SavingsAccount) bankAccount;
+            return bankAccountMapper.mapToSavingsAccountDTO(savingsAccount);
+        } else {
+            CurrentAccount currentAccount = (CurrentAccount) bankAccount;
+            return bankAccountMapper.mapToCurrentAccountDTO(currentAccount);
+        }
     }
 
 
     @Override
     public void debit(String accountId, double amount, String description) throws BankAccountNotFoundExcetion, InsufficientBalanceException {
-        BankAccount bankAccount = getBankAccount(accountId);
+        BankAccount bankAccount = bankAccountRepository.findById(accountId)
+                .orElseThrow(() -> new BankAccountNotFoundExcetion("Bank Account not found"));
         if (bankAccount.getBalance() < amount) {
             throw new InsufficientBalanceException("Insufficient balance");
         }
@@ -159,7 +169,8 @@ public class BankAccountService implements com.banca.digital.services.BankAccoun
 
     @Override
     public void credit(String accountId, double amount, String description) throws BankAccountNotFoundExcetion {
-        BankAccount bankAccount = getBankAccount(accountId);
+        BankAccount bankAccount = bankAccountRepository.findById(accountId)
+                .orElseThrow(() -> new BankAccountNotFoundExcetion("Bank Account not found"));
         AccountOperation accountOperation = new AccountOperation();
         accountOperation.setOperationType(OperationType.CREDIT);
         accountOperation.setAmount(amount);
@@ -182,7 +193,17 @@ public class BankAccountService implements com.banca.digital.services.BankAccoun
     }
 
     @Override
-    public List<BankAccount> getBankAccount() {
-        return bankAccountRepository.findAll();
+    public List<BankAccountDTO> getBankAccount() {
+        List<BankAccount> bankAccounts = bankAccountRepository.findAll();
+        List<BankAccountDTO> bankAccountDTOS = bankAccounts.stream().map(bankAccount -> {
+            if (bankAccount instanceof CurrentAccount) {
+                SavingsAccount savingsAccount = (SavingsAccount) bankAccount;
+                return bankAccountMapper.mapToCurrentAccountDTO((CurrentAccount) bankAccount);
+            } else {
+                CurrentAccount currentAccount = (CurrentAccount) bankAccount;
+                return bankAccountMapper.mapToSavingsAccountDTO((SavingsAccount) bankAccount);
+            }
+        }).collect(Collectors.toList());
+        return bankAccountDTOS;
     }
 }

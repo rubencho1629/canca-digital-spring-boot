@@ -1,9 +1,9 @@
 package com.banca.digital.services;
 
+import com.banca.digital.dtos.BankAccountDTO;
 import com.banca.digital.dtos.ClientDTO;
-import com.banca.digital.entities.BankAccount;
-import com.banca.digital.entities.CurrentAccount;
-import com.banca.digital.entities.SavingsAccount;
+import com.banca.digital.dtos.CurrentAccountDTO;
+import com.banca.digital.dtos.SavingsAccountDTO;
 import com.banca.digital.exceptions.BankAccountNotFoundExcetion;
 import com.banca.digital.exceptions.ClientNotFoundException;
 import com.banca.digital.exceptions.InsufficientBalanceException;
@@ -22,13 +22,13 @@ public interface BankAccountService {
 
     void deleteClient(Long id) throws ClientNotFoundException;
 
-    CurrentAccount saveCurrentAccount(double balance, double overdraft, Long clientId) throws ClientNotFoundException;
+    CurrentAccountDTO saveCurrentAccount(double balance, double overdraft, Long clientId) throws ClientNotFoundException;
 
-    SavingsAccount saveSavingsAccount(double balance, double interestRate, Long clientId) throws ClientNotFoundException;
+    SavingsAccountDTO saveSavingsAccount(double balance, double interestRate, Long clientId) throws ClientNotFoundException;
 
     List<ClientDTO> getClients();
 
-    BankAccount getBankAccount(String accountId) throws BankAccountNotFoundExcetion;
+    BankAccountDTO getBankAccount(String accountId) throws BankAccountNotFoundExcetion;
 
     void debit(String accountId, double amount, String description) throws BankAccountNotFoundExcetion, InsufficientBalanceException;
 
@@ -36,5 +36,5 @@ public interface BankAccountService {
 
     void transfer(String originAccountId, String targetAccountId, double amount) throws BankAccountNotFoundExcetion, InsufficientBalanceException;
 
-    List<BankAccount> getBankAccount() ;
+    List<BankAccountDTO> getBankAccount();
 }
